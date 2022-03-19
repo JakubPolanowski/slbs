@@ -1,0 +1,2 @@
+class slbsError(Exception):
+    pass
