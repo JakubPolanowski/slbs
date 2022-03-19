@@ -5,6 +5,7 @@ import PySide2
 
 support = None
 
+# TODO check if rework needed
 if PySide2.__version__ == "5.12.2":
     import PySide2.support as support
 else:
@@ -18,14 +19,14 @@ else:
 if support is not None:
     """
     This should give roughly the same results as:
-    
+
         from PyInstaller.utils.hooks import collect_data_files
         datas = collect_data_files(
             'shiboken2', include_py_files=True, subdir='support'
         )
-    
+
     The reason we don't do it this way is that it would add a dynamic link to
-    PyInstaller, and thus force the GPL on fbs, preventing it from being
+    PyInstaller, and thus force the GPL on slbs, preventing it from being
     licensed under different terms (such as a commercial license).
     """
     _base_dir = dirname(support.__file__)

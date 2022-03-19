@@ -31,7 +31,7 @@ This should give roughly the same results as:
     )
 
 The reason we don't do it this way is that it would add a dynamic link to
-PyInstaller, and thus force the GPL on fbs, preventing it from being licensed
+PyInstaller, and thus force the GPL on slbs, preventing it from being licensed
 under different terms (such as a commercial license).
 """
 _base_dir = dirname(PySide2.support.__file__)

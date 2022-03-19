@@ -1,15 +1,16 @@
-from fbs import path, SETTINGS
-from fbs._state import LOADED_PROFILES
-from fbs.resources import _copy
-from fbs_runtime._fbs import filter_public_settings
-from fbs_runtime._source import default_path
-from fbs_runtime.platform import is_mac
+from slbs import path, SETTINGS
+from slbs._state import LOADED_PROFILES
+from slbs.resources import _copy
+from slbs_runtime._slbs import filter_public_settings
+from slbs_runtime._source import default_path
+from slbs_runtime.platform import is_mac
 from os import rename, makedirs
 from os.path import join, dirname
 from pathlib import PurePath
 from subprocess import run
 
-import fbs_runtime._frozen
+import slbs_runtime._frozen
+
 
 def run_pyinstaller(extra_args=None, debug=False):
     if extra_args is None:
@@ -53,10 +54,11 @@ def run_pyinstaller(extra_args=None, debug=False):
     if PurePath(output_dir) != PurePath(freeze_dir):
         rename(output_dir, freeze_dir)
 
+
 def _generate_runtime_hook():
     makedirs(path('target/PyInstaller'), exist_ok=True)
-    module = fbs_runtime._frozen
-    hook_path = path('target/PyInstaller/fbs_pyinstaller_hook.py')
+    module = slbs_runtime._frozen
+    hook_path = path('target/PyInstaller/slbs_pyinstaller_hook.py')
     with open(hook_path, 'w') as f:
         # Inject public settings such as "version" into the binary, so
         # they're available at run time:
@@ -66,6 +68,7 @@ def _generate_runtime_hook():
             'module.BUILD_SETTINGS = %r' % filter_public_settings(SETTINGS)
         ]))
     return hook_path
+
 
 def _generate_resources():
     """

@@ -1,10 +1,11 @@
-from fbs import path, SETTINGS
-from fbs.freeze import _generate_resources, run_pyinstaller
-from fbs.resources import get_icons
+from slbs import path, SETTINGS
+from slbs.freeze import _generate_resources, run_pyinstaller
+from slbs.resources import get_icons
 from os import makedirs, unlink, rename, symlink
 from os.path import exists
 from shutil import copy, rmtree
 from subprocess import run
+
 
 def freeze_mac(debug=False):
     if not exists(path('target/Icon.icns')):
@@ -24,6 +25,7 @@ def freeze_mac(debug=False):
     _fix_sparkle_delta_updates()
     _generate_resources()
 
+
 def _generate_iconset():
     makedirs(path('target/Icon.iconset'), exist_ok=True)
     for size, scale, icon_path in get_icons():
@@ -32,6 +34,7 @@ def _generate_iconset():
             dest_name += '@%dx' % scale
         dest_name += '.png'
         copy(icon_path, path('target/Icon.iconset/' + dest_name))
+
 
 def _remove_unwanted_pyinstaller_files():
     for unwanted in ('include', 'lib', 'lib2to3'):
@@ -43,6 +46,7 @@ def _remove_unwanted_pyinstaller_files():
             rmtree(path('${freeze_dir}/Contents/Resources/' + unwanted))
         except FileNotFoundError:
             pass
+
 
 def _fix_sparkle_delta_updates():
     # Sparkle's Delta Updates mechanism does not support signed non-Mach-O files

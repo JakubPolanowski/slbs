@@ -1,4 +1,5 @@
-from fbs.freeze.linux import freeze_linux, remove_shared_libraries
+from slbs.freeze.linux import freeze_linux, remove_shared_libraries
+
 
 def freeze_fedora(debug=False):
     freeze_linux(debug)

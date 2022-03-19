@@ -1,8 +1,9 @@
-from fbs import path
-from fbs.freeze import _generate_resources, run_pyinstaller
+from slbs import path
+from slbs.freeze import _generate_resources, run_pyinstaller
 from glob import glob
 from os import remove
 from shutil import copy
+
 
 def freeze_linux(debug=False):
     run_pyinstaller(debug=debug)
@@ -17,6 +18,7 @@ def freeze_linux(debug=False):
     remove_shared_libraries(
         'libstdc++.so.*', 'libtinfo.so.*', 'libreadline.so.*', 'libdrm.so.*'
     )
+
 
 def remove_shared_libraries(*filename_patterns):
     for pattern in filename_patterns:

@@ -1,7 +1,7 @@
-from fbs import path, SETTINGS
-from fbs.freeze import run_pyinstaller, _generate_resources
-from fbs.resources import _copy
-from fbs_runtime._source import default_path
+from slbs import path, SETTINGS
+from slbs.freeze import run_pyinstaller, _generate_resources
+from slbs.resources import _copy
+from slbs_runtime._source import default_path
 from os import remove
 from os.path import join, exists
 from shutil import copy
@@ -9,6 +9,7 @@ from shutil import copy
 import os
 import struct
 import sys
+
 
 def freeze_windows(debug=False):
     args = []
@@ -18,13 +19,15 @@ def freeze_windows(debug=False):
         args.append('--windowed')
     args.extend(['--icon', path('src/main/icons/Icon.ico')])
     for path_fn in default_path, path:
-        _copy(path_fn, 'src/freeze/windows/version_info.py', path('target/PyInstaller'))
+        _copy(path_fn, 'src/freeze/windows/version_info.py',
+              path('target/PyInstaller'))
     args.extend(['--version-file', path('target/PyInstaller/version_info.py')])
     run_pyinstaller(args, debug)
     _restore_corrupted_python_dlls()
     _generate_resources()
     copy(path('src/main/icons/Icon.ico'), path('${freeze_dir}'))
     _add_missing_dlls()
+
 
 def _restore_corrupted_python_dlls():
     # PyInstaller <= 3.4 somehow corrupts python3*.dll - see:
@@ -41,6 +44,7 @@ def _restore_corrupted_python_dlls():
             pass
         else:
             copy(_find_on_path(dll_name), path('${freeze_dir}'))
+
 
 def _add_missing_dlls():
     for dll_name in (
@@ -75,10 +79,12 @@ def _add_missing_dlls():
                 )
             ) from None
 
+
 def _add_missing_dll(dll_name):
     freeze_dir = path('${freeze_dir}')
     if not exists(join(freeze_dir, dll_name)):
         copy(_find_on_path(dll_name), freeze_dir)
+
 
 def _find_on_path(file_name):
     path = os.environ.get("PATH", os.defpath)
