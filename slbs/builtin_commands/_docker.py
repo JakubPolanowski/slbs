@@ -1,9 +1,9 @@
-from fbs import path, SETTINGS
-from fbs.builtin_commands import require_existing_project
-from fbs.cmdline import command
-from fbs.resources import _copy
-from fbs_runtime import FbsError
-from fbs_runtime._source import default_path
+from slbs import path, SETTINGS
+from slbs.builtin_commands import require_existing_project
+from slbs.cmdline import command
+from slbs.resources import _copy
+from slbs_runtime import slbsError
+from slbs_runtime._source import default_path
 from os import listdir
 from os.path import exists
 from shutil import rmtree
@@ -14,6 +14,7 @@ import logging
 __all__ = ['buildvm', 'runvm']
 
 _LOG = logging.getLogger(__name__)
+
 
 @command
 def buildvm(name):
@@ -29,7 +30,7 @@ def buildvm(name):
     if exists(path(src_root)):
         available_vms.update(listdir(path(src_root)))
     if name not in available_vms:
-        raise FbsError(
+        raise slbsError(
             'Could not find %s. Available VMs are:%s' %
             (name, ''.join(['\n * ' + vm for vm in available_vms]))
         )
@@ -51,11 +52,12 @@ def buildvm(name):
     except CalledProcessError as e:
         if '/private-key.gpg: no such file or directory' in e.stderr:
             message = 'Could not find private-key.gpg. Maybe you want to ' \
-                      'run:\n    fbs gengpgkey'
+                      'run:\n    slbs gengpgkey'
         else:
             message = e.stdout + '\n' + e.stderr
-        raise FbsError(message)
-    _LOG.info('Done. You can now execute:\n    fbs runvm ' + name)
+        raise slbsError(message)
+    _LOG.info('Done. You can now execute:\n    slbs runvm ' + name)
+
 
 @command
 def runvm(name):
@@ -71,23 +73,26 @@ def runvm(name):
         _run_docker(args, stderr=PIPE, universal_newlines=True, check=True)
     except CalledProcessError as e:
         if 'Unable to find image' in e.stderr:
-            raise FbsError(
+            raise slbsError(
                 'Docker could not find image %s. You may want to run:\n'
-                '    fbs buildvm %s' % (docker_id, name)
+                '    slbs buildvm %s' % (docker_id, name)
             )
+
 
 def _run_docker(args, **kwargs):
     try:
         return run(['docker'] + args, **kwargs)
     except FileNotFoundError:
-        raise FbsError(
-            'fbs could not find Docker. Is it installed and on your PATH?'
+        raise slbsError(
+            'slbs could not find Docker. Is it installed and on your PATH?'
         )
+
 
 def _get_docker_id(name):
     prefix = SETTINGS['app_name'].replace(' ', '_').lower()
     suffix = name.lower()
     return prefix + '/' + suffix
+
 
 def _get_docker_mounts(name):
     result = {'target/' + name.lower(): 'target'}
@@ -97,8 +102,10 @@ def _get_docker_mounts(name):
         if file_name in ignore:
             continue
         result[file_name] = file_name
-    path_in_docker = lambda p: '/root/%s/%s' % (SETTINGS['app_name'], p)
+
+    def path_in_docker(p): return '/root/%s/%s' % (SETTINGS['app_name'], p)
     return {path(src): path_in_docker(dest) for src, dest in result.items()}
+
 
 def _get_settings(name):
     return SETTINGS['docker_images'][name]

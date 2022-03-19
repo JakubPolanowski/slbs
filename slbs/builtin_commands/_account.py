@@ -1,11 +1,14 @@
-from fbs import path, _server
-from fbs.builtin_commands import prompt_for_value, require_existing_project
-from fbs.builtin_commands._util import update_json, SECRET_JSON
-from fbs.cmdline import command
+from slbs import path, _server
+from slbs.builtin_commands import prompt_for_value, require_existing_project
+from slbs.builtin_commands._util import update_json, SECRET_JSON
+from slbs.cmdline import command
 
 import logging
 
 _LOG = logging.getLogger(__name__)
+
+# TODO this should be removed, online repo not part of slbs scope
+
 
 @command
 def register():
@@ -27,6 +30,7 @@ def register():
     else:
         _LOG.error('Could not register:\n' + text)
 
+
 @command
 def login():
     """
@@ -38,6 +42,8 @@ def login():
     print('')
     _login(username, password)
 
+
 def _login(username, password):
-    update_json(path(SECRET_JSON), {'fbs_user': username, 'fbs_pass': password})
+    update_json(path(SECRET_JSON), {
+                'slbs_user': username, 'slbs_pass': password})
     _LOG.info('Saved your username and password to %s.', SECRET_JSON)

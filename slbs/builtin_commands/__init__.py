@@ -1,16 +1,16 @@
 """
-This module contains all of fbs's built-in commands. They are invoked when you
-run `fbs <command>` on the command line. But you are also free to import them in
+This module contains all of slbs's built-in commands. They are invoked when you
+run `slbs <command>` on the command line. But you are also free to import them in
 your Python build script and execute them there.
 """
-from fbs import path, SETTINGS, activate_profile
-from fbs.builtin_commands._util import prompt_for_value, is_valid_version, \
+from slbs import path, SETTINGS, activate_profile
+from slbs.builtin_commands._util import prompt_for_value, is_valid_version, \
     require_existing_project, update_json, require_frozen_app, require_installer
-from fbs.cmdline import command
-from fbs.resources import copy_with_filtering
-from fbs.upload import _upload_repo
-from fbs_runtime import FbsError
-from fbs_runtime.platform import is_windows, is_mac, is_linux, is_arch_linux, \
+from slbs.cmdline import command
+from slbs.resources import copy_with_filtering
+from slbs.upload import _upload_repo
+from slbs_runtime import slbsError
+from slbs_runtime.platform import is_windows, is_mac, is_linux, is_arch_linux, \
     is_ubuntu, is_fedora
 from getpass import getuser
 from importlib.util import find_spec
@@ -26,13 +26,14 @@ import sys
 
 _LOG = logging.getLogger(__name__)
 
+
 @command
 def startproject():
     """
     Start a new project in the current directory
     """
     if exists('src'):
-        raise FbsError('The src/ directory already exists. Aborting.')
+        raise slbsError('The src/ directory already exists. Aborting.')
     app = prompt_for_value('App name', default='MyApp')
     user = getuser().title()
     author = prompt_for_value('Author', default=user)
@@ -55,7 +56,7 @@ def startproject():
     )
     mkdir('src')
     template_dir = join(dirname(__file__), 'project_template')
-    template_path = lambda relpath: join(template_dir, *relpath.split('/'))
+    def template_path(relpath): return join(template_dir, *relpath.split('/'))
     copy_with_filtering(
         template_dir, '.', {
             'app_name': app,
@@ -72,8 +73,9 @@ def startproject():
     print('')
     _LOG.info(
         "Created the src/ directory. If you have %s installed, you can now "
-        "do:\n\n    fbs run", python_bindings
+        "do:\n\n    slbs run", python_bindings
     )
+
 
 @command
 def run():
@@ -82,7 +84,7 @@ def run():
     """
     require_existing_project()
     if not _has_module('PyQt5') and not _has_module('PySide2'):
-        raise FbsError(
+        raise slbsError(
             "Couldn't find PyQt5 or PySide2. Maybe you need to:\n"
             "    pip install PyQt5==5.9.2 or\n"
             "    pip install PySide2==5.12.2"
@@ -95,6 +97,7 @@ def run():
     env['PYTHONPATH'] = pythonpath
     subprocess.run([sys.executable, path(SETTINGS['main_module'])], env=env)
 
+
 @command
 def freeze(debug=False):
     """
@@ -102,50 +105,51 @@ def freeze(debug=False):
     """
     require_existing_project()
     if not _has_module('PyInstaller'):
-        raise FbsError(
+        raise slbsError(
             "Could not find PyInstaller. Maybe you need to:\n"
-            "    pip install PyInstaller==3.4"
+            "    pip install PyInstaller==3.4"  # TODO check if should be higher version
         )
     version = SETTINGS['version']
     if not is_valid_version(version):
-        raise FbsError(
+        raise slbsError(
             'Invalid version detected in settings. It should be three\n'
             'numbers separated by dots, such as "1.2.3". You have:\n\t"%s".\n'
             'Usually, this can be fixed in src/build/settings/base.json.'
             % version
         )
     # Import respective functions late to avoid circular import
-    # fbs <-> fbs.freeze.X.
+    # slbs <-> slbs.freeze.X.
     app_name = SETTINGS['app_name']
     if is_mac():
-        from fbs.freeze.mac import freeze_mac
+        from slbs.freeze.mac import freeze_mac
         freeze_mac(debug=debug)
         executable = 'target/%s.app/Contents/MacOS/%s' % (app_name, app_name)
     else:
         executable = join('target', app_name, app_name)
         if is_windows():
-            from fbs.freeze.windows import freeze_windows
+            from slbs.freeze.windows import freeze_windows
             freeze_windows(debug=debug)
             executable += '.exe'
         elif is_linux():
             if is_ubuntu():
-                from fbs.freeze.ubuntu import freeze_ubuntu
+                from slbs.freeze.ubuntu import freeze_ubuntu
                 freeze_ubuntu(debug=debug)
             elif is_arch_linux():
-                from fbs.freeze.arch import freeze_arch
+                from slbs.freeze.arch import freeze_arch
                 freeze_arch(debug=debug)
             elif is_fedora():
-                from fbs.freeze.fedora import freeze_fedora
+                from slbs.freeze.fedora import freeze_fedora
                 freeze_fedora(debug=debug)
             else:
-                from fbs.freeze.linux import freeze_linux
+                from slbs.freeze.linux import freeze_linux
                 freeze_linux(debug=debug)
         else:
-            raise FbsError('Unsupported OS')
+            raise slbsError('Unsupported OS')
     _LOG.info(
         "Done. You can now run `%s`. If that doesn't work, see "
         "https://build-system.fman.io/troubleshooting.", executable
     )
+
 
 @command
 def sign():
@@ -154,16 +158,17 @@ def sign():
     """
     require_frozen_app()
     if is_windows():
-        from fbs.sign.windows import sign_windows
+        from slbs.sign.windows import sign_windows
         sign_windows()
         _LOG.info(
             'Signed all binary files in %s and its subdirectories.',
             relpath(path('${freeze_dir}'), path('.'))
         )
     elif is_mac():
-        _LOG.info('fbs does not yet implement `sign` on macOS.')
+        _LOG.info('slbs does not yet implement `sign` on macOS.')
     else:
         _LOG.info('This platform does not support signing frozen apps.')
+
 
 @command
 def installer():
@@ -173,41 +178,41 @@ def installer():
     require_frozen_app()
     linux_distribution_not_supported_msg = \
         "Your Linux distribution is not supported, sorry. " \
-        "You can run `fbs buildvm` followed by `fbs runvm` to start a Docker " \
+        "You can run `slbs buildvm` followed by `slbs runvm` to start a Docker " \
         "VM of a supported distribution."
     try:
         installer_fname = SETTINGS['installer']
     except KeyError:
         if is_linux():
-            raise FbsError(linux_distribution_not_supported_msg)
+            raise slbsError(linux_distribution_not_supported_msg)
         raise
     out_file = join('target', installer_fname)
     msg_parts = ['Created %s.' % out_file]
     if is_windows():
-        from fbs.installer.windows import create_installer_windows
+        from slbs.installer.windows import create_installer_windows
         create_installer_windows()
     elif is_mac():
-        from fbs.installer.mac import create_installer_mac
+        from slbs.installer.mac import create_installer_mac
         create_installer_mac()
     elif is_linux():
         app_name = SETTINGS['app_name']
         if is_ubuntu():
-            from fbs.installer.ubuntu import create_installer_ubuntu
+            from slbs.installer.ubuntu import create_installer_ubuntu
             create_installer_ubuntu()
             install_cmd = 'sudo dpkg -i ' + out_file
             remove_cmd = 'sudo dpkg --purge ' + app_name
         elif is_arch_linux():
-            from fbs.installer.arch import create_installer_arch
+            from slbs.installer.arch import create_installer_arch
             create_installer_arch()
             install_cmd = 'sudo pacman -U ' + out_file
             remove_cmd = 'sudo pacman -R ' + app_name
         elif is_fedora():
-            from fbs.installer.fedora import create_installer_fedora
+            from slbs.installer.fedora import create_installer_fedora
             create_installer_fedora()
             install_cmd = 'sudo dnf install ' + out_file
             remove_cmd = 'sudo dnf remove ' + app_name
         else:
-            raise FbsError(linux_distribution_not_supported_msg)
+            raise slbsError(linux_distribution_not_supported_msg)
         msg_parts.append(
             'You can for instance install it via the following command:\n'
             '    %s\n'
@@ -216,8 +221,9 @@ def installer():
             % (install_cmd, app_name, remove_cmd)
         )
     else:
-        raise FbsError('Unsupported OS')
+        raise slbsError('Unsupported OS')
     _LOG.info(' '.join(msg_parts))
+
 
 @command
 def sign_installer():
@@ -225,44 +231,46 @@ def sign_installer():
     Sign installer, so the user's OS trusts it
     """
     if is_mac():
-        _LOG.info('fbs does not yet implement `sign_installer` on macOS.')
+        # TODO Implement
+        _LOG.info('slbs does not yet implement `sign_installer` on macOS.')
         return
     if is_ubuntu():
         _LOG.info('Ubuntu does not support signing installers.')
         return
     require_installer()
     if is_windows():
-        from fbs.sign_installer.windows import sign_installer_windows
+        from slbs.sign_installer.windows import sign_installer_windows
         sign_installer_windows()
     elif is_arch_linux():
-        from fbs.sign_installer.arch import sign_installer_arch
+        from slbs.sign_installer.arch import sign_installer_arch
         sign_installer_arch()
     elif is_fedora():
-        from fbs.sign_installer.fedora import sign_installer_fedora
+        from slbs.sign_installer.fedora import sign_installer_fedora
         sign_installer_fedora()
     _LOG.info('Signed %s.', join('target', SETTINGS['installer']))
+
 
 @command
 def repo():
     """
-    Generate files for automatic updates
+    Generate files for automatic updates  # TODO consider removing given scope of slbs
     """
     require_existing_project()
     if not _repo_is_supported():
-        raise FbsError('This command is not supported on this platform.')
+        raise slbsError('This command is not supported on this platform.')
     app_name = SETTINGS['app_name']
     pkg_name = app_name.lower()
     try:
         gpg_key = SETTINGS['gpg_key']
     except KeyError:
-        raise FbsError(
+        raise slbsError(
             'GPG key for code signing is not configured. You might want to '
             'either\n'
-            '    1) run `fbs gengpgkey` or\n'
+            '    1) run `slbs gengpgkey` or\n'
             '    2) set "gpg_key" and "gpg_pass" in src/build/settings/.'
         )
     if is_ubuntu():
-        from fbs.repo.ubuntu import create_repo_ubuntu
+        from slbs.repo.ubuntu import create_repo_ubuntu
         if not SETTINGS['description']:
             _LOG.info(
                 'Hint: Your app\'s "description" is empty. Consider setting it '
@@ -272,7 +280,7 @@ def repo():
         _LOG.info(
             'Done. You can test the repository with the following commands:\n'
             '    echo "deb [arch=amd64] file://%s stable main" '
-                '| sudo tee /etc/apt/sources.list.d/%s.list\n'
+            '| sudo tee /etc/apt/sources.list.d/%s.list\n'
             '    sudo apt-key add %s\n'
             '    sudo apt-get update\n'
             '    sudo apt-get install %s\n'
@@ -287,13 +295,13 @@ def repo():
             extra={'wrap': False}
         )
     elif is_arch_linux():
-        from fbs.repo.arch import create_repo_arch
+        from slbs.repo.arch import create_repo_arch
         create_repo_arch()
         _LOG.info(
             "Done. You can test the repository with the following commands:\n"
             "    sudo cp /etc/pacman.conf /etc/pacman.conf.bu\n"
             "    echo -e '\\n[%s]\\nServer = file://%s' "
-                "| sudo tee -a /etc/pacman.conf\n"
+            "| sudo tee -a /etc/pacman.conf\n"
             "    sudo pacman-key --add %s\n"
             "    sudo pacman-key --lsign-key %s\n"
             "    sudo pacman -Syu %s\n"
@@ -308,7 +316,7 @@ def repo():
         )
     else:
         assert is_fedora()
-        from fbs.repo.fedora import create_repo_fedora
+        from slbs.repo.fedora import create_repo_fedora
         create_repo_fedora()
         _LOG.info(
             "Done. You can test the repository with the following commands:\n"
@@ -324,29 +332,33 @@ def repo():
             extra={'wrap': False}
         )
 
+
 def _repo_is_supported():
     return is_ubuntu() or is_arch_linux() or is_fedora()
+
+# TODO THIS needs to be removed, online repo NOT part of slbs scope
+
 
 @command
 def upload():
     """
-    Upload installer and repository to fbs.sh
+    Upload installer and repository to slbs.sh
     """
     require_existing_project()
     try:
-        username = SETTINGS['fbs_user']
-        password = SETTINGS['fbs_pass']
+        username = SETTINGS['slbs_user']
+        password = SETTINGS['slbs_pass']
     except KeyError as e:
-        raise FbsError(
+        raise slbsError(
             'Could not find setting "%s". You may want to invoke one of the '
             'following:\n'
-            ' * fbs register\n'
-            ' * fbs login'
+            ' * slbs register\n'
+            ' * slbs login'
             % (e.args[0],)
         ) from None
     _upload_repo(username, password)
     app_name = SETTINGS['app_name']
-    url = lambda p: 'https://fbs.sh/%s/%s/%s' % (username, app_name, p)
+    def url(p): return 'https://slbs.sh/%s/%s/%s' % (username, app_name, p)
     message = 'Done! '
     pkg_name = app_name.lower()
     installer_url = url(SETTINGS['installer'])
@@ -404,7 +416,7 @@ def upload():
                 'sudo yum clean all && sudo yum upgrade ' + pkg_name
             )
         else:
-            raise FbsError('This Linux distribution is not supported.')
+            raise slbsError('This Linux distribution is not supported.')
         message += '\nFinally, your users can also install without automatic ' \
                    'updates by downloading:\n    ' + installer_url
         extra = {'wrap': False}
@@ -412,6 +424,7 @@ def upload():
         message += 'Your users can now download and install %s.' % installer_url
         extra = None
     _LOG.info(message, extra=extra)
+
 
 @command
 def release(version=None):
@@ -431,7 +444,7 @@ def release(version=None):
         release_version = version
     if not is_valid_version(release_version):
         if not is_valid_version(version):
-            raise FbsError(
+            raise slbsError(
                 'The release version of your app is invalid. It should be '
                 'three\nnumbers separated by dots, such as "1.2.3". '
                 'You have: "%s".' % release_version
@@ -448,7 +461,7 @@ def release(version=None):
             sign()
         installer()
         if (is_windows() and _has_windows_codesigning_certificate()) or \
-            is_arch_linux() or is_fedora():
+                is_arch_linux() or is_fedora():
             sign_installer()
         if _repo_is_supported():
             repo()
@@ -456,8 +469,9 @@ def release(version=None):
         _LOG.setLevel(log_level)
     upload()
     base_json = 'src/build/settings/base.json'
-    update_json(path(base_json), { 'version': release_version })
+    update_json(path(base_json), {'version': release_version})
     _LOG.info('Also, %s was updated with the new version.', base_json)
+
 
 @command
 def test():
@@ -485,9 +499,10 @@ def test():
         TextTestRunner().run(suite)
     else:
         _LOG.warning(
-            'No tests found. You can add them to:\n * '+
+            'No tests found. You can add them to:\n * ' +
             '\n * '.join(test_dirs)
         )
+
 
 @command
 def clean():
@@ -510,13 +525,16 @@ def clean():
             elif islink(fpath):
                 unlink(fpath)
 
+
 def _has_windows_codesigning_certificate():
     assert is_windows()
-    from fbs.sign.windows import _CERTIFICATE_PATH
+    from slbs.sign.windows import _CERTIFICATE_PATH
     return exists(path(_CERTIFICATE_PATH))
+
 
 def _has_module(name):
     return bool(find_spec(name))
+
 
 def _get_next_version(version):
     version_parts = version.split('.')

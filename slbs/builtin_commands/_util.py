@@ -1,6 +1,6 @@
 from collections import OrderedDict
-from fbs import path
-from fbs_runtime import FbsError
+from slbs import path
+from slbs_runtime import slbsError
 from getpass import getpass
 from os.path import exists
 from pathlib import Path
@@ -10,6 +10,7 @@ import re
 
 BASE_JSON = 'src/build/settings/base.json'
 SECRET_JSON = 'src/build/settings/secret.json'
+
 
 def prompt_for_value(
     value, optional=False, default='', password=False, choices=()
@@ -30,32 +31,37 @@ def prompt_for_value(
         print(default)
         return default
     if not optional:
+        # TODO CHECK if requires rework
         while not result or (choices and result not in choices_dict):
             result = prompt(message).strip()
     return choices_dict[result] if choices else result
 
+
 def require_existing_project():
     if not exists(path('src')):
-        raise FbsError(
+        raise slbsError(
             "Could not find the src/ directory. Are you in the right folder?\n"
             "If yes, did you already run\n"
-            "    fbs startproject ?"
+            "    slbs startproject ?"
         )
+
 
 def require_frozen_app():
     if not exists(path('${freeze_dir}')):
-        raise FbsError(
+        raise slbsError(
             'It seems your app has not yet been frozen. Please run:\n'
-            '    fbs freeze'
+            '    slbs freeze'
         )
+
 
 def require_installer():
     installer = path('target/${installer}')
     if not exists(installer):
-        raise FbsError(
+        raise slbsError(
             'Installer does not exist. Maybe you need to run:\n'
-            '    fbs installer'
+            '    slbs installer'
         )
+
 
 def update_json(f_path, dict_):
     f = Path(f_path)
@@ -68,8 +74,10 @@ def update_json(f_path, dict_):
         new_contents = _update_json_str(contents, dict_)
     f.write_text(new_contents)
 
+
 def is_valid_version(version_str):
     return bool(re.match(r'\d+\.\d+\.\d+$', version_str))
+
 
 def _update_json_str(json_str, dict_):
     if not dict_:
@@ -78,6 +86,7 @@ def _update_json_str(json_str, dict_):
     data.update(dict_)
     indent = _infer_indent(json_str)
     return json.dumps(data, indent=indent)
+
 
 def _infer_indent(json_str):
     start = json_str.find('{')

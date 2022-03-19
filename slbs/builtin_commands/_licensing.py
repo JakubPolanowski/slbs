@@ -1,12 +1,13 @@
-from fbs import path
-from fbs.builtin_commands import prompt_for_value, require_existing_project
-from fbs.builtin_commands._util import update_json, SECRET_JSON, BASE_JSON
-from fbs.cmdline import command
+from slbs import path
+from slbs.builtin_commands import prompt_for_value, require_existing_project
+from slbs.builtin_commands._util import update_json, SECRET_JSON, BASE_JSON
+from slbs.cmdline import command
 
 import json
 import logging
 
 _LOG = logging.getLogger(__name__)
+
 
 @command
 def init_licensing():
@@ -56,6 +57,7 @@ def init_licensing():
                'application, see:\n '\
                '    https://build-system.fman.io/manual#licensing.'
     _LOG.info(message)
+
 
 def _prompt_for_nbits():
     while True:
