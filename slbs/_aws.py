@@ -2,6 +2,7 @@ from os.path import relpath, join
 
 import os
 
+
 def upload_folder_contents(dir_path, dest_path, bucket, key, secret):
     result = []
     for file_path in _iter_files_recursive(dir_path):
@@ -13,6 +14,7 @@ def upload_folder_contents(dir_path, dest_path, bucket, key, secret):
         result.append(file_dest)
     return result
 
+
 def upload_file(file_path, dest_path, bucket, key, secret):
     # Import late to not make boto3 a dependency of fbs only when the upload
     # functionality is actually used.
@@ -21,6 +23,7 @@ def upload_file(file_path, dest_path, bucket, key, secret):
         's3', aws_access_key_id=key, aws_secret_access_key=secret
     )
     s3.Bucket(bucket).upload_file(file_path, dest_path)
+
 
 def _iter_files_recursive(dir_path):
     for subdir_path, dir_names, file_names in os.walk(dir_path):

@@ -1,17 +1,21 @@
-from fbs import _server, SETTINGS, path
-from fbs._aws import upload_file, upload_folder_contents
-from fbs_runtime import FbsError
-from fbs_runtime.platform import is_linux
+from slbs import _server, SETTINGS, path
+from slbs._aws import upload_file, upload_folder_contents
+from slbs_runtime import slbsError
+from slbs_runtime.platform import is_linux
 from os.path import basename
 
 import json
+
+# TODO determine if this functionality should be removed given scope of slbs
+
 
 def _upload_repo(username, password):
     status, response = _server.post_json('start_upload', {
         'username': username,
         'password': password
     })
-    unexpected_response = lambda: FbsError(
+
+    def unexpected_response(): return slbsError(
         'Received unexpected server response %d:\n%s' % (status, response)
     )
     if status // 2 != 100:
@@ -24,7 +28,8 @@ def _upload_repo(username, password):
         credentials = data['bucket'], data['key'], data['secret']
     except KeyError:
         raise unexpected_response()
-    dest_path = lambda p: username + '/' + SETTINGS['app_name'] + '/' + p
+
+    def dest_path(p): return username + '/' + SETTINGS['app_name'] + '/' + p
     installer = path('target/${installer}')
     installer_dest = dest_path(basename(installer))
     upload_file(installer, installer_dest, *credentials)
@@ -32,7 +37,8 @@ def _upload_repo(username, password):
     if is_linux():
         repo_dest = dest_path(SETTINGS['repo_subdir'])
         uploaded.extend(
-            upload_folder_contents(path('target/repo'), repo_dest, *credentials)
+            upload_folder_contents(path('target/repo'),
+                                   repo_dest, *credentials)
         )
         pubkey_dest = dest_path('public-key.gpg')
         upload_file(

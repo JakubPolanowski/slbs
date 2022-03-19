@@ -1,20 +1,22 @@
 from logging import StreamHandler
 from textwrap import wrap
 
-import fbs.cmdline
+import slbs.cmdline
 import logging
 import sys
 
+
 def _main():
     """
-    Main entry point for the `fbs` command line script.
+    Main entry point for the `slbs` command line script.
 
-    We init logging here instead of in fbs.cmdline.main(...) because the latter
-    can be called by projects using fbs, and it's bad practice for libraries to
+    We init logging here instead of in slbs.cmdline.main(...) because the latter
+    can be called by projects using slbs, and it's bad practice for libraries to
     configure logging. See eg. https://stackoverflow.com/a/26087972/1839209.
     """
     _init_logging()
-    fbs.cmdline.main()
+    slbs.cmdline.main()
+
 
 def _init_logging():
     # Redirect INFO or lower to stdout, WARNING or higher to stderr:
@@ -28,10 +30,12 @@ def _init_logging():
         level=logging.INFO, format='%(message)s', handlers=(stdout, stderr)
     )
 
+
 class _WrappingStreamHandler(StreamHandler):
     def __init__(self, stream=None, line_length=70):
         super().__init__(stream)
         self._line_length = line_length
+
     def format(self, record):
         result = super().format(record)
         if not getattr(record, 'wrap', True):
@@ -45,6 +49,7 @@ class _WrappingStreamHandler(StreamHandler):
                 wrap(line, self._line_length, replace_whitespace=False) or ['']
             )
         return self.terminator.join(new_lines)
+
 
 if __name__ == '__main__':
     _main()

@@ -1,9 +1,10 @@
-from fbs import SETTINGS
-from fbs_runtime import FbsError
+from slbs import SETTINGS
+from slbs_runtime import slbsError
 from subprocess import run, DEVNULL, check_call, check_output, PIPE, \
     CalledProcessError
 
 import re
+
 
 def preset_gpg_passphrase():
     # Ensure gpg-agent is running:
@@ -23,6 +24,7 @@ def preset_gpg_passphrase():
         SETTINGS['gpg_pass'], keygrip
     ], stdout=DEVNULL)
 
+
 def _get_keygrip(pubkey_id):
     try:
         output = check_output(
@@ -33,10 +35,10 @@ def _get_keygrip(pubkey_id):
         if 'invalid option "--with-keygrip"' in e.stderr:
             raise GpgDoesNotSupportKeygrip() from None
         elif 'No secret key' in e.stderr:
-            raise FbsError(
+            raise slbsError(
                 "GPG could not read your key for code signing. Perhaps you "
                 "don't want\nto run this command here, but after:\n"
-                "    fbs runvm {ubuntu|fedora|arch}"
+                "    slbs runvm {ubuntu|fedora|arch}"
             )
         raise
     pure_signing_subkey = _find_keygrip(output, 'S')
@@ -47,6 +49,7 @@ def _get_keygrip(pubkey_id):
         return any_signing_key
     raise RuntimeError('Keygrip not found. Output was:\n' + output)
 
+
 def _find_keygrip(gpg2_output, type_re):
     lines = gpg2_output.split('\n')
     for i, line in enumerate(lines):
@@ -55,6 +58,7 @@ def _find_keygrip(gpg2_output, type_re):
                 m = re.match(r' +Keygrip = ([A-Z0-9]{40})', keygrip_line)
                 if m:
                     return m.group(1)
+
 
 class GpgDoesNotSupportKeygrip(RuntimeError):
     pass
