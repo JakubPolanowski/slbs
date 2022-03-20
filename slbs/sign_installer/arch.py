@@ -1,6 +1,7 @@
-from fbs import path, SETTINGS
-from fbs._gpg import preset_gpg_passphrase
+from slbs import path, SETTINGS
+from slbs._gpg import preset_gpg_passphrase
 from subprocess import check_call, DEVNULL
+
 
 def sign_installer_arch():
     installer = path('target/${installer}')
@@ -8,6 +9,6 @@ def sign_installer_arch():
     preset_gpg_passphrase()
     check_call(
         ['gpg', '--batch', '--yes', '-u', SETTINGS['gpg_key'],
-        '--output', installer + '.sig', '--detach-sig', installer],
+         '--output', installer + '.sig', '--detach-sig', installer],
         stdout=DEVNULL
     )
