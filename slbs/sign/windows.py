@@ -1,5 +1,5 @@
-from fbs import path, SETTINGS
-from fbs_runtime import FbsError
+from slbs import path, SETTINGS
+from slbs_runtime import slbsError
 from os import makedirs
 from os.path import join, splitext, dirname, basename, exists
 from shutil import copy
@@ -12,14 +12,15 @@ import os
 _CERTIFICATE_PATH = 'src/sign/windows/certificate.pfx'
 _TO_SIGN = ('.exe', '.cab', '.dll', '.ocx', '.msi', '.xpi')
 
+
 def sign_windows():
     if not exists(path(_CERTIFICATE_PATH)):
-        raise FbsError(
+        raise slbsError(
             'Could not find a code signing certificate at:\n    '
             + _CERTIFICATE_PATH
         )
     if 'windows_sign_pass' not in SETTINGS:
-        raise FbsError(
+        raise slbsError(
             "Please set 'windows_sign_pass' to the password of %s in either "
             "src/build/settings/secret.json, .../windows.json or .../base.json."
             % _CERTIFICATE_PATH
@@ -30,10 +31,12 @@ def sign_windows():
             if extension in _TO_SIGN:
                 sign_file(join(subdir, file_))
 
+
 def sign_file(file_path, description='', url=''):
     helper = _SignHelper.instance()
     if not helper.is_signed(file_path):
         helper.sign(file_path, description, url)
+
 
 class _SignHelper:
 
@@ -60,8 +63,8 @@ class _SignHelper:
             with open(json_path) as f:
                 cached = json.load(f)
             is_in_cache = description == cached['description'] and \
-                          url == cached['url'] and \
-                          self._hash(file_path) == cached['hash']
+                url == cached['url'] and \
+                self._hash(file_path) == cached['hash']
         except FileNotFoundError:
             is_in_cache = False
         if not is_in_cache:
