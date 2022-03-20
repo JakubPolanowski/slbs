@@ -1,11 +1,12 @@
-from fbs import path, SETTINGS
-from fbs.installer import _generate_installer_resources
-from fbs.resources import get_icons
-from fbs_runtime.platform import is_arch_linux
+from slbs import path, SETTINGS
+from slbs.installer import _generate_installer_resources
+from slbs.resources import get_icons
+from slbs_runtime.platform import is_arch_linux
 from os import makedirs, remove, rename
 from os.path import join, dirname, exists
 from shutil import copy, rmtree, copytree
 from subprocess import run, DEVNULL
+
 
 def generate_installer_files():
     if exists(path('target/installer')):
@@ -19,6 +20,7 @@ def generate_installer_files():
         join(apps_dir, SETTINGS['app_name'] + '.desktop')
     )
     _generate_icons()
+
 
 def run_fpm(output_type):
     dest = path('target/${installer}')
@@ -63,16 +65,18 @@ def run_fpm(output_type):
         run(args, check=True, stdout=DEVNULL)
     except FileNotFoundError:
         raise FileNotFoundError(
-            "fbs could not find executable 'fpm'. Please install fpm using the "
+            "slbs could not find executable 'fpm'. Please install fpm using the "
             "instructions at "
             "https://fpm.readthedocs.io/en/latest/installing.html."
         ) from None
+
 
 def _generate_icons():
     dest_root = path('target/installer/usr/share/icons/hicolor')
     makedirs(dest_root)
     icons_fname = '%s.png' % SETTINGS['app_name']
     for size, _, icon_path in get_icons():
-        icon_dest = join(dest_root, '%dx%d' % (size, size), 'apps', icons_fname)
+        icon_dest = join(dest_root, '%dx%d' %
+                         (size, size), 'apps', icons_fname)
         makedirs(dirname(icon_dest))
         copy(icon_path, icon_dest)

@@ -1,6 +1,6 @@
 import platform
-from fbs import path, SETTINGS
-from fbs_runtime.platform import is_mac
+from slbs import path, SETTINGS
+from slbs_runtime.platform import is_mac
 from os import replace, remove
 from os.path import join, dirname, exists
 from subprocess import check_call, DEVNULL
@@ -29,7 +29,7 @@ def create_installer_mac():
                 pdata.insert(1, '--no-internet-enable')
 
         check_call(pdata, stdout=DEVNULL)
-    except:
+    except:  # TODO Check if requires rework
         if dest_existed:
             replace(dest_bu, dest)
         raise

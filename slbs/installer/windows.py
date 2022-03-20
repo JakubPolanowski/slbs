@@ -1,6 +1,7 @@
-from fbs import path
-from fbs.installer import _generate_installer_resources
+from slbs import path
+from slbs.installer import _generate_installer_resources
 from subprocess import check_call, DEVNULL
+
 
 def create_installer_windows():
     _generate_installer_resources()
@@ -11,6 +12,6 @@ def create_installer_windows():
         )
     except FileNotFoundError:
         raise FileNotFoundError(
-            "fbs could not find executable 'makensis'. Please install NSIS and "
+            "slbs could not find executable 'makensis'. Please install NSIS and "
             "add its installation directory to your PATH environment variable."
         ) from None
