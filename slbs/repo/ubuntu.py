@@ -1,11 +1,12 @@
-from fbs import path
-from fbs._gpg import preset_gpg_passphrase
-from fbs.resources import copy_with_filtering
-from fbs_runtime._source import default_path
+from slbs import path
+from slbs._gpg import preset_gpg_passphrase
+from slbs.resources import copy_with_filtering
+from slbs_runtime._source import default_path
 from os import makedirs
 from os.path import exists
 from shutil import rmtree
 from subprocess import check_call, DEVNULL
+
 
 def create_repo_ubuntu():
     dest_dir = path('target/repo')
